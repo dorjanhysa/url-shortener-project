@@ -3,6 +3,7 @@ package com.dorjan.urlshortener.service;
 import com.dorjan.urlshortener.config.UrlShortenerProperties;
 import com.dorjan.urlshortener.dto.ShortenUrlRequest;
 import com.dorjan.urlshortener.dto.UrlResponse;
+import com.dorjan.urlshortener.exception.BusinessException;
 import com.dorjan.urlshortener.mapper.UrlMapper;
 import com.dorjan.urlshortener.model.Url;
 import com.dorjan.urlshortener.repository.UrlRepository;
@@ -42,7 +43,7 @@ public class UrlService {
         // Create new shortened URL
         Url url = new Url();
         url.setLongUrl(request.getLongUrl());
-        url.setShortUrl(ShortCodeGenerator.generate());
+        url.setShortUrl(ShortCodeGenerator.generate(properties.shortCodeLength()));
         url.setCreatedAt(LocalDateTime.now());
         url.setExpiresAt(LocalDateTime.now().plusMinutes(expiration));
         url.setClickCount(0);
@@ -53,20 +54,20 @@ public class UrlService {
 
     public String resolveUrl(String shortCode) {
         Url url = urlRepository.findByShortUrl(shortCode)
-                .orElseThrow(() -> new RuntimeException("Short URL not found"));
+                .orElseThrow(BusinessException::urlNotFound);
 
         if (url.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("URL has expired");
+            throw BusinessException.urlExpired();
         }
 
-        url.setClickCount(url.getClickCount() + 1);
-        urlRepository.save(url);
+        urlRepository.incrementClickCount(shortCode);
+
         return url.getLongUrl();
     }
 
     public UrlResponse updateExpiration(String shortCode, int minutes) {
         Url url = urlRepository.findByShortUrl(shortCode)
-                .orElseThrow(() -> new RuntimeException("Short URL not found"));
+                .orElseThrow(BusinessException::urlNotFound);
 
         url.setExpiresAt(LocalDateTime.now().plusMinutes(minutes));
         urlRepository.save(url);
@@ -75,7 +76,7 @@ public class UrlService {
 
     public UrlResponse getUrlStats(String shortCode) {
         Url url = urlRepository.findByShortUrl(shortCode)
-                .orElseThrow(() -> new RuntimeException("Short URL not found"));
+                .orElseThrow(BusinessException::urlNotFound);
         return urlMapper.toResponse(url);
     }
 
