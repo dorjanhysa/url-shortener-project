@@ -28,19 +28,16 @@ public class UrlService {
                 ? request.getExpirationMinutes()
                 : properties.defaultExpirationMinutes();
 
-        // Check if this long URL is already shortened and not expired
         var existing = urlRepository.findByLongUrlAndExpiresAtAfter(
                 request.getLongUrl(), LocalDateTime.now());
 
         if (existing.isPresent()) {
-            // Reset expiration time and return existing
             Url url = existing.get();
             url.setExpiresAt(LocalDateTime.now().plusMinutes(expiration));
             urlRepository.save(url);
             return urlMapper.toResponse(url);
         }
 
-        // Create new shortened URL
         Url url = new Url();
         url.setLongUrl(request.getLongUrl());
         url.setCreatedAt(LocalDateTime.now());
