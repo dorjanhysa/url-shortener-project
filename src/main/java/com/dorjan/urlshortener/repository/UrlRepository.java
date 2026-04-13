@@ -24,4 +24,6 @@ public interface UrlRepository extends JpaRepository<Url, Long> {
     @Transactional
     @Query("UPDATE Url u SET u.clickCount = u.clickCount + 1 WHERE u.shortUrl = :shortUrl")
     void incrementClickCount(@Param("shortUrl") String shortUrl);
+
+    boolean existsByShortUrl(String shortUrl);
 }
