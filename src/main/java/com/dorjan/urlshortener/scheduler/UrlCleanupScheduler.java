@@ -13,7 +13,7 @@ public class UrlCleanupScheduler {
 
     private final UrlService urlService;
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(cron = "${cleanup.scheduler.cron}")
     public void cleanupExpiredUrls() {
         log.info("Cleaning up expired URLs...");
         urlService.deleteExpiredUrls();

@@ -19,3 +19,18 @@ url-shortener:
 jwt:
   secret: ${JWT_SECRET}
   expiration: 3600000
+
+minio:
+  endpoint: ${MINIO_ENDPOINT}
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
+  bucket-name: ${MINIO_BUCKET_NAME}
+
+# Scheduled Jobs
+report:
+  scheduler:
+    cron: "0 0 0 * * ?"
+
+cleanup:
+  scheduler:
+    cron: "0 0 * * * ?"
