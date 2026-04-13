@@ -43,10 +43,16 @@ public class UrlService {
         // Create new shortened URL
         Url url = new Url();
         url.setLongUrl(request.getLongUrl());
-        url.setShortUrl(ShortCodeGenerator.generate(properties.shortCodeLength()));
         url.setCreatedAt(LocalDateTime.now());
-        url.setExpiresAt(LocalDateTime.now().plusMinutes(expiration));
         url.setClickCount(0);
+
+        String shortCode;
+        do {
+            shortCode = ShortCodeGenerator.generate(properties.shortCodeLength());
+        } while (urlRepository.existsByShortUrl(shortCode));
+
+        url.setShortUrl(shortCode);
+        url.setExpiresAt(LocalDateTime.now().plusMinutes(expiration));
 
         urlRepository.save(url);
         return urlMapper.toResponse(url);
@@ -57,7 +63,8 @@ public class UrlService {
                 .orElseThrow(BusinessException::urlNotFound);
 
         if (url.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw BusinessException.urlExpired();
+            urlRepository.delete(url);
+            throw BusinessException.urlNotFound();
         }
 
         urlRepository.incrementClickCount(shortCode);
