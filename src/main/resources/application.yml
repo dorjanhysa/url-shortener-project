@@ -14,7 +14,7 @@ spring:
 url-shortener:
   default-expiration-minutes: 5
   base-url: http://localhost:8080
-  short-code-length: 6
+  short-code-length: 8
 
 jwt:
   secret: ${JWT_SECRET}
@@ -34,3 +34,9 @@ report:
 cleanup:
   scheduler:
     cron: "0 0 * * * ?"
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
