@@ -2,6 +2,8 @@ package com.dorjan.urlshortener.repository;
 
 import com.dorjan.urlshortener.model.Url;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -26,4 +28,8 @@ public interface UrlRepository extends JpaRepository<Url, Long> {
     void incrementClickCount(@Param("shortUrl") String shortUrl);
 
     boolean existsByShortUrl(String shortUrl);
+
+    @Query("SELECT u FROM Url u WHERE u.shortUrl LIKE %:q%")
+    Page<Url> searchByKeyword(@Param("q") String query, Pageable pageable);
+
 }

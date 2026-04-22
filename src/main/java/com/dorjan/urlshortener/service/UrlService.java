@@ -4,12 +4,16 @@ import com.dorjan.urlshortener.config.UrlShortenerProperties;
 import com.dorjan.urlshortener.dto.ShortenUrlRequest;
 import com.dorjan.urlshortener.dto.UrlResponse;
 import com.dorjan.urlshortener.exception.BusinessException;
+import com.dorjan.urlshortener.kafka.UrlEventProducer;
 import com.dorjan.urlshortener.mapper.UrlMapper;
 import com.dorjan.urlshortener.model.Url;
 import com.dorjan.urlshortener.repository.UrlRepository;
 import com.dorjan.urlshortener.util.ShortCodeGenerator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,6 +26,7 @@ public class UrlService {
     private final UrlRepository urlRepository;
     private final UrlShortenerProperties properties;
     private final UrlMapper urlMapper;
+    private final UrlEventProducer urlEventProducer;
 
     public UrlResponse shortenUrl(ShortenUrlRequest request) {
         int expiration = request.getExpirationMinutes() != null
@@ -52,6 +57,7 @@ public class UrlService {
         url.setExpiresAt(LocalDateTime.now().plusMinutes(expiration));
 
         urlRepository.save(url);
+        urlEventProducer.publishUrlCreated(url);
         return urlMapper.toResponse(url);
     }
 
@@ -61,10 +67,13 @@ public class UrlService {
 
         if (url.getExpiresAt().isBefore(LocalDateTime.now())) {
             urlRepository.delete(url);
+            urlEventProducer.publishUrlExpired(url);
             throw BusinessException.urlNotFound();
         }
 
         urlRepository.incrementClickCount(shortCode);
+
+        urlEventProducer.publishUrlClicked(shortCode, url.getClickCount() + 1);
 
         return url.getLongUrl();
     }
@@ -91,5 +100,12 @@ public class UrlService {
     @Transactional
     public void deleteExpiredUrls() {
         urlRepository.deleteByExpiresAtBefore(LocalDateTime.now());
+    }
+
+    public Page<UrlResponse> searchWithPagination(String shortCode, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Url> urlPage = urlRepository.searchByKeyword(shortCode, pageable);
+
+        return urlPage.map(urlMapper::toResponse);
     }
 }
