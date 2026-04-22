@@ -57,18 +57,18 @@ jobs:
           name: jacoco-coverage-report
           path: target/site/jacoco
 
-docker:
-  name: Build Docker Image
-  needs: test
-  runs-on: ubuntu-latest
-  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  docker:
+    name: Build Docker Image
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Build Docker image
-      run: docker build -t url-shortener:latest .
+      - name: Build Docker image
+        run: docker build -t url-shortener:latest .
