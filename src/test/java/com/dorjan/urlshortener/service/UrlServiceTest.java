@@ -4,6 +4,7 @@ import com.dorjan.urlshortener.config.UrlShortenerProperties;
 import com.dorjan.urlshortener.dto.ShortenUrlRequest;
 import com.dorjan.urlshortener.dto.UrlResponse;
 import com.dorjan.urlshortener.exception.BusinessException;
+import com.dorjan.urlshortener.kafka.UrlEventProducer;
 import com.dorjan.urlshortener.mapper.UrlMapper;
 import com.dorjan.urlshortener.model.Url;
 import com.dorjan.urlshortener.repository.UrlRepository;
@@ -35,6 +36,9 @@ class UrlServiceTest {
 
     @Mock
     private UrlShortenerProperties properties;
+
+    @Mock
+    private UrlEventProducer urlEventProducer;
 
     @InjectMocks
     private UrlService urlService;

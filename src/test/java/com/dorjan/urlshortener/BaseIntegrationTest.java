@@ -5,12 +5,16 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.kafka.KafkaContainer;
+import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SuppressWarnings("resource")
 public abstract class BaseIntegrationTest {
 
     static final PostgreSQLContainer<?> postgres;
     static final GenericContainer<?> minio;
+    static final KafkaContainer kafka;
 
     static {
         postgres = new PostgreSQLContainer<>("postgres:16-alpine")
@@ -25,6 +29,9 @@ public abstract class BaseIntegrationTest {
                 .withEnv("MINIO_ROOT_PASSWORD", "minioadmin")
                 .withCommand("server /data");
         minio.start();
+
+        kafka = new KafkaContainer(DockerImageName.parse("apache/kafka:3.8.0"));
+        kafka.start();
     }
 
     @DynamicPropertySource
@@ -41,5 +48,6 @@ public abstract class BaseIntegrationTest {
         registry.add("minio.access-key", () -> "minioadmin");
         registry.add("minio.secret-key", () -> "minioadmin");
         registry.add("minio.bucket-name", () -> "test-reports");
+        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
     }
 }
